@@ -1,0 +1,382 @@
+Layout {
+  FileType : "delimited"
+  Delimiter : ","
+  Latitude : "5"
+  Longitude : "6"
+  SkipRows : "1"
+  TextCodec : "System"
+  FieldDefinitions {
+    0 {
+      Name : "flag"
+      Type : "string"
+    }
+    1 {
+      Name : "No"
+      Type : "int"
+    }
+    2 {
+      Name : "GPSŽž(UTC)"
+      Type : "string"
+    }
+    3 {
+      Name : "GPS_PCTime"
+      Type : "string"
+    }
+    4 {
+      Name : "ˆÜ“x"
+      Type : "string"
+    }
+    5 {
+      Name : "Œo“x"
+      Type : "double"
+    }
+    6 {
+      Name : "ŠC”²"
+      Type : "double"
+    }
+    7 {
+      Name : "•ûˆÊ"
+      Type : "double"
+    }
+    8 {
+      Name : "‘¬“x"
+      Type : "double"
+    }
+    9 {
+      Name : "‰q¯”"
+      Type : "double"
+    }
+    10 {
+      Name : "RMCStatus"
+      Type : "string"
+    }
+    11 {
+      Name : "GPSNote"
+      Type : "string"
+    }
+    12 {
+      Name : "DetFlag_0"
+      Type : "int"
+    }
+    13 {
+      Name : "DoseRate_0"
+      Type : "double"
+    }
+    14 {
+      Name : "DetVal1_0"
+      Type : "double"
+    }
+    15 {
+      Name : "DetVal2_0"
+      Type : "double"
+    }
+    16 {
+      Name : "DetFlag_1"
+      Type : "double"
+    }
+    17 {
+      Name : "DoseRate_1"
+      Type : "int"
+    }
+    18 {
+      Name : "DetVal1_1"
+      Type : "int"
+    }
+    19 {
+      Name : "DetVal2_1"
+      Type : "int"
+    }
+    20 {
+      Name : "DetFlag_2"
+      Type : "int"
+    }
+    21 {
+      Name : "DoseRate_2"
+      Type : "int"
+    }
+    22 {
+      Name : "DetVal1_2"
+      Type : "int"
+    }
+    23 {
+      Name : "DetVal2_2"
+      Type : "int"
+    }
+    24 {
+      Name : "DetFlag_3"
+      Type : "int"
+    }
+    25 {
+      Name : "DoseRate_3"
+      Type : "int"
+    }
+    26 {
+      Name : "DetVal1_3"
+      Type : "int"
+    }
+    27 {
+      Name : "DetVal2_3"
+      Type : "int"
+    }
+    28 {
+      Name : "DetFlag_4"
+      Type : "int"
+    }
+    29 {
+      Name : "DoseRate_4"
+      Type : "int"
+    }
+    30 {
+      Name : "DetVal1_4"
+      Type : "int"
+    }
+    31 {
+      Name : "DetVal2_4"
+      Type : "int"
+    }
+    32 {
+      Name : "DetFlag_5"
+      Type : "int"
+    }
+    33 {
+      Name : "DoseRate_5"
+      Type : "int"
+    }
+    34 {
+      Name : "DetVal1_5"
+      Type : "int"
+    }
+    35 {
+      Name : "DetVal2_5"
+      Type : "int"
+    }
+    36 {
+      Name : "DetFlag_6"
+      Type : "int"
+    }
+    37 {
+      Name : "DoseRate_6"
+      Type : "int"
+    }
+    38 {
+      Name : "DetVal1_6"
+      Type : "int"
+    }
+    39 {
+      Name : "DetVal2_6"
+      Type : "int"
+    }
+    40 {
+      Name : "DetFlag_7"
+      Type : "int"
+    }
+    41 {
+      Name : "DoseRate_7"
+      Type : "int"
+    }
+    42 {
+      Name : "DetVal1_7"
+      Type : "int"
+    }
+    43 {
+      Name : "DetVal2_7"
+      Type : "int"
+    }
+    44 {
+      Name : "DetFlag_8"
+      Type : "int"
+    }
+    45 {
+      Name : "DoseRate_8"
+      Type : "int"
+    }
+    46 {
+      Name : "DetVal1_8"
+      Type : "int"
+    }
+    47 {
+      Name : "DetVal2_8"
+      Type : "int"
+    }
+    48 {
+      Name : "DetFlag_9"
+      Type : "int"
+    }
+    49 {
+      Name : "DoseRate_9"
+      Type : "int"
+    }
+    50 {
+      Name : "DetVal1_9"
+      Type : "int"
+    }
+    51 {
+      Name : "DetVal2_9"
+      Type : "int"
+    }
+    52 {
+      Name : "DetFlag_10"
+      Type : "int"
+    }
+    53 {
+      Name : "DoseRate_10"
+      Type : "int"
+    }
+    54 {
+      Name : "DetVal1_10"
+      Type : "int"
+    }
+    55 {
+      Name : "DetVal2_10"
+      Type : "int"
+    }
+    56 {
+      Name : "DetFlag_11"
+      Type : "int"
+    }
+    57 {
+      Name : "DoseRate_11"
+      Type : "int"
+    }
+    58 {
+      Name : "DetVal1_11"
+      Type : "int"
+    }
+    59 {
+      Name : "DetVal2_11"
+      Type : "int"
+    }
+    60 {
+      Name : "DetFlag_12"
+      Type : "int"
+    }
+    61 {
+      Name : "DoseRate_12"
+      Type : "int"
+    }
+    62 {
+      Name : "DetVal1_12"
+      Type : "int"
+    }
+    63 {
+      Name : "DetVal2_12"
+      Type : "int"
+    }
+    64 {
+      Name : "DetFlag_13"
+      Type : "int"
+    }
+    65 {
+      Name : "DoseRate_13"
+      Type : "int"
+    }
+    66 {
+      Name : "DetVal1_13"
+      Type : "int"
+    }
+    67 {
+      Name : "DetVal2_13"
+      Type : "int"
+    }
+    68 {
+      Name : "DetFlag_14"
+      Type : "int"
+    }
+    69 {
+      Name : "DoseRate_14"
+      Type : "int"
+    }
+    70 {
+      Name : "DetVal1_14"
+      Type : "int"
+    }
+    71 {
+      Name : "DetVal2_14"
+      Type : "int"
+    }
+    72 {
+      Name : "DetFlag_15"
+      Type : "int"
+    }
+    73 {
+      Name : "DoseRate_15"
+      Type : "int"
+    }
+    74 {
+      Name : "DetVal1_15"
+      Type : "int"
+    }
+    75 {
+      Name : "DetVal2_15"
+      Type : "int"
+    }
+    76 {
+      Name : "DetFlag_16"
+      Type : "int"
+    }
+    77 {
+      Name : "DoseRate_16"
+      Type : "int"
+    }
+    78 {
+      Name : "DetVal1_16"
+      Type : "int"
+    }
+    79 {
+      Name : "DetVal2_16"
+      Type : "int"
+    }
+    80 {
+      Name : "DetFlag_17"
+      Type : "int"
+    }
+    81 {
+      Name : "DoseRate_17"
+      Type : "int"
+    }
+    82 {
+      Name : "DetVal1_17"
+      Type : "int"
+    }
+    83 {
+      Name : "DetVal2_17"
+      Type : "int"
+    }
+    84 {
+      Name : "DetFlag_18"
+      Type : "int"
+    }
+    85 {
+      Name : "DoseRate_18"
+      Type : "int"
+    }
+    86 {
+      Name : "DetVal1_18"
+      Type : "int"
+    }
+    87 {
+      Name : "DetVal2_18"
+      Type : "int"
+    }
+    88 {
+      Name : "DetFlag_19"
+      Type : "int"
+    }
+    89 {
+      Name : "DoseRate_19"
+      Type : "int"
+    }
+    90 {
+      Name : "DetVal1_19"
+      Type : "int"
+    }
+    91 {
+      Name : "DetVal2_19"
+      Type : "int"
+    }
+    92 {
+      Name : "DetectorNote"
+      Type : "string"
+    }
+  }
+}

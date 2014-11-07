@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Cal Poly Radiation Map</title>
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+    </style>
+
+ <style type="text/css">
+   .labels {
+     color: white;
+     /*background-color: black;*/
+     font-family: "Lucida Grande", "Arial", sans-serif;
+     font-size: 12px;
+     text-align: center;
+     width: 25px;
+     height: 20px; 
+     white-space: nowrap;
+   }
+ </style>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+	<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+	<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+	<script src="js/infobubble.js"></script>
+	<script src="js/markerwithlabel.js"></script>
+
+    <script>
+var map, layer1, layer2;
+
+var maplocation = 'slo';
+
+var slo_minlat = 35.14;
+var slo_minlng = -120.92;
+var fukushima_minlat = 37.37;
+var fukushima_minlng = 140.7;
+
+
+if(maplocation == 'slo')
+{
+	var minlat = slo_minlat;
+	var minlng = slo_minlng;
+}
+else if (maplocation =='fukushima')
+{
+	var minlat = fukushima_minlat;
+	var minlng = fukushima_minlng;
+}
+
+
+var centerLatLng = new google.maps.LatLng(minlat,minlng);
+
+var celldivisions = 20;
+var cellwidth = 0.02;
+var cellheight = 0.018;
+var latarray = [minlat];
+var lngarray = [minlng];
+var cellarray = [];
+var markerarray = [];
+var play;
+var mapbounds = new google.maps.LatLngBounds();
+
+var infobubblestyle = {
+	  shadowStyle: 1,
+	  padding: 5,
+	  backgroundColor: '#222',
+	  borderRadius: 4,
+	  arrowSize: 10,
+	  borderWidth: 0,
+	  borderColor: '#aaa',
+	  disableAutoPan: true,
+	  hideCloseButton: true,
+	  arrowPosition: 50,
+	  arrowStyle: 0,
+	  maxWidth: 30,
+	  minWidth: 30,
+	  minHeight: 30,
+	  maxHeight: 30,
+	  disableAnimation: true
+	};
+	var infobubble,twittercall;
+	var twittertimer = true; // set to false if you want to pause the twitter calls
+function initialize() {
+	var styles = 
+	[
+		{
+			"stylers": 
+			[
+				{ "saturation": -90 },
+				{ "gamma": 0.8 }
+			]
+		}
+	]
+
+	map = new google.maps.Map(document.getElementById('map-canvas'), {
+		center: centerLatLng,
+		zoom: 11,
+		mapTypeId: google.maps.MapTypeId.TERRAIN,
+		zoomControl: true,
+		zoomControlOptions: {
+			style: google.maps.ZoomControlStyle.SMALL,
+			position: google.maps.ControlPosition.TOP_RIGHT
+		},
+		panControl: false,
+		streetViewControl: false,
+	});
+	map.setOptions({styles: styles});
+	createGrid();
+	addNuclearMarker();
+
+	twittercall = setInterval(function(){
+		if(twittertimer) { searchTwitter('mapoutloud'); };		
+	},1000);
+
+}
+
+function createGrid() {
+
+	for(var i=1;i<=celldivisions;i++)
+	{
+		var thislat = minlat+cellheight*i;
+		latarray.push(thislat);
+		var thislng = minlng+cellwidth*i;
+		lngarray.push(thislng);
+	}
+
+	var cellcount = 0;
+	for(var i=0;i<celldivisions;i++)
+	{
+		for(var j=0;j<celldivisions;j++)
+		{
+			var polygonCoords = [
+				new google.maps.LatLng(latarray[i], lngarray[j]),
+				new google.maps.LatLng(latarray[i], lngarray[j+1]),
+				new google.maps.LatLng(latarray[i+1], lngarray[j+1]),
+				new google.maps.LatLng(latarray[i+1], lngarray[j]),
+				new google.maps.LatLng(latarray[i], lngarray[j])
+			];
+			var bounds = new google.maps.LatLngBounds();
+			for (k = 0; k < polygonCoords.length; k++) {
+				bounds.extend(polygonCoords[k]);
+			}
+			var centroid = bounds.getCenter();
+			mapbounds.extend(centroid);
+			map.fitBounds(mapbounds);
+
+			var poly = new google.maps.Polygon({
+				paths: polygonCoords,
+				strokeColor: '#fff',
+				strokeOpacity: 0.3,
+				strokeWeight: 2,
+				fillColor: '#000000',
+				fillOpacity: 0,
+				centroid: centroid,
+				// cellid: cellcount
+			});
+
+			// cellarray[cellcount] = poly;
+			poly.setMap(map);
+			cellarray.push(poly);
+			var polyid = cellarray.length-1;
+			poly.polyid = polyid;
+
+			//we're in a loop, so put the event listener in a variable to "freeze" the polyid
+			var addListener = function(polyid){
+				google.maps.event.addListener(cellarray[polyid], 'mouseover', function() {
+					// console.log(polyid)
+					polyHover(polyid);
+				});
+			}
+			
+			addListener(polyid);
+			// cellcount++;
+			
+
+
+		}
+	}
+}
+
+var polyLabels=[];
+function labelPolys(){
+	$.each(cellarray,function(i,val){
+
+		// darken each poly
+		cellarray[i].setOptions({
+			// fillColor: 'black',
+			fillOpacity: 0.5
+		})
+		// label each poly
+		var marker = new MarkerWithLabel({
+			position: val.centroid,
+			map: map,
+			// draggable: true,
+			// raiseOnDrag: true,
+			labelContent: val.polyid,
+			labelAnchor: new google.maps.Point(12, 10),
+			labelClass: "labels", // the CSS class for the label
+			labelInBackground: false,
+			icon: {}
+		});
+		polyLabels.push(marker);
+	})	
+}
+
+function removeLabelPolys(){
+
+	$.each(cellarray,function(i,val){
+
+		// darken each poly
+		cellarray[i].setOptions({
+			fillOpacity: 0
+		})
+
+	});
+	for(i in polyLabels){polyLabels[i].setMap(null)};
+}
+
+function changeLocation(loc){
+	clearMap();
+	for(i in cellarray){cellarray[i].setMap(null)};
+	cellarray = [];
+	// reset the bounds
+	mapbounds = new google.maps.LatLngBounds();
+
+	maplocation = loc;
+	if(maplocation == 'slo')
+	{
+		minlat = slo_minlat;
+		minlng = slo_minlng;
+	}
+	else if (maplocation =='fukushima')
+	{
+		minlat = fukushima_minlat;
+		minlng = fukushima_minlng;
+	}
+
+	latarray = [minlat];
+	lngarray = [minlng];
+
+	createGrid();
+}
+
+function automate(){
+	play = setInterval(function(){randomCellGenerator()},500);
+}
+
+function stopautomate(){
+	clearInterval(play);
+}
+
+function randomCellGenerator(){
+	randomCellID = Math.floor((Math.random()*celldivisions*celldivisions)+1);
+	randomValue = Math.floor((Math.random()*60)+1);
+	updateCell(randomCellID,randomValue);
+}
+
+function updateCell(cellid,value,val){
+console.log(val)
+	if(value < 20)
+	{
+		var color = 'green';
+		var fontcolor = 'white';
+	}
+	else if (value >=20 && value < 40)
+	{
+		var color = 'yellow';
+		var fontcolor = 'black';
+	}
+	else if (value >=40 && value <= 60)
+	{
+		var color = 'red';
+		var fontcolor = 'white';
+	}
+
+
+	// can we drop the polygon from the sky?
+	var marker = new google.maps.Marker({
+		map:map,
+		draggable:true,
+		icon: {
+			path: google.maps.SymbolPath.CIRCLE,
+			scale: 15,
+			fillColor: color,
+			fillOpacity: 0.4,
+			// scale: 1,
+			strokeColor: color,
+			strokeOpacity: 0.1,
+			strokeWeight: 2
+		},
+		animation: google.maps.Animation.DROP,
+		position: cellarray[cellid].centroid,
+		twitter: val
+	});
+
+	markerarray.push(marker);
+	var markerid = markerarray.length-1;
+
+	// var title = '<div style="text-align:center;font-size:1.2em;color:'+fontcolor+';overflow:hidden;">' + value+'</div>';
+
+    // highlight on hover
+	google.maps.event.addListener(marker, 'mouseover', function() {
+		markerHover(markerid,color,fontcolor,value);
+
+		// infobubblestyle.backgroundColor = color;
+		// infoBubble = new InfoBubble(infobubblestyle);	
+		// infoBubble.setContent(title);
+		// infoBubble.open(map,marker);
+	});
+
+	google.maps.event.addListener(marker, 'mouseout', function() {
+		infoBubble.close();
+	});
+
+
+	if(val != undefined)
+	{
+		twitterthumb=val.user.profile_image_url;
+		var datetime = val.created_at;
+		var text = val.text;
+	}
+	else
+	{
+		twitterthumb='images/bird.png';
+		var currentdate = new Date(); 
+		var datetime = currentdate.getDate() + "/"
+                + (currentdate.getMonth()+1)  + "/" 
+                + currentdate.getFullYear() + " @ "  
+                + currentdate.getHours() + ":"  
+                + currentdate.getMinutes() + ":" 
+                + currentdate.getSeconds();
+        var text = '';
+	}
+
+
+	// $('#radiationlog').append('<div class="well row" onmouseover="markerHover('+markerid+',\''+color+'\',\''+fontcolor+'\','+value+')" onmouseout="markerHoverOut('+markerid+')" ><div class="col-md-2"><img class="img-circle" src="'+twitterthumb+'"></div><div class="col-md-4"><span class="badge label-default" style="color:'+fontcolor+';background:'+color+';">'+value+'</span> (cell id: '+cellid+')<br>'+datetime+'</div></div>');
+	$('#radiationlog').prepend('<div class="well row" style="padding:5px;width:100%;margin:5px;;" onmouseover="markerHover('+markerid+',\''+color+'\',\''+fontcolor+'\','+value+')" onmouseout="markerHoverOut('+markerid+')" ><div class="col-sm-2 text-center"><img class="img-circle" src="'+twitterthumb+'"><br><span class="small ">'+val.user.screen_name+'</span></div><div class="col-sm-10"><span class="badge label-default" style="color:'+fontcolor+';background:'+color+';">'+value+'</span>  '+text+'<br><small>'+datetime+'</small></div></div>');
+
+	// cellarray[cellid].setOptions({
+	// 	fillOpacity:0.5,
+	// 	fillColor: color,
+	// })
+}
+
+function markerHover(markerid,color,fontcolor,value){
+	// markerarray[markerid].setAnimation(google.maps.Animation.BOUNCE);
+
+	var title = '<div style="text-align:center;font-size:1.2em;color:'+fontcolor+';overflow:hidden;">' + value+'</div>';
+
+		infobubblestyle.backgroundColor = color;
+		infoBubble = new InfoBubble(infobubblestyle);	
+		infoBubble.setContent(title);
+		infoBubble.open(map,markerarray[markerid]);
+
+}
+
+function markerHoverOut(markerid){
+	markerarray[markerid].setAnimation(null);
+	infoBubble.close();
+}
+function polyHover(polyid){
+	color='#444';
+	fontcolor='#ccc';
+	value = cellarray[polyid].id;
+
+	var title = '<div style="text-align:center;font-size:1.2em;color:'+fontcolor+';overflow:hidden;">' + value+'</div>';
+
+		infobubblestyle.backgroundColor = color;
+		infoBubble = new InfoBubble(infobubblestyle);
+		infoBubble.setContent(title);
+		infoBubble.open(map,cellarray[polyid]);
+
+}
+function polyHoverOut(polyid){
+	// polyarray[polyid].setAnimation(null);
+	infoBubble.close();
+}
+
+function clearMap(){
+	for(i in markerarray){markerarray[i].setMap(null)};
+	markerarray = [];
+	$('#radiationlog').empty();
+	// for(i in cellarray){cellarray[i].setMap(null)};
+
+}
+
+var last_id='0';
+var q="fukushima";
+
+function searchTwitter(q){
+	var url = 'twitter_proxy/search.php?since_id='+last_id+'&count=100&q=' + escape(q);
+	console.log(url)
+	$.getJSON(url,function(json){
+		console.log(json.statuses.length)
+		if(json.statuses.length>0)
+		{
+			$('#alertbox').html('Found '+json.statuses.length);
+		}
+		else
+		{
+			$('#alertbox').prepend('.');
+		}
+		var reversedjson = json.statuses.reverse();
+		$.each(reversedjson,function(i,val){
+			if (val.id_str > last_id)
+			{
+				last_id = val.id_str;
+			}
+			parseTweet(val);
+		})
+	})
+}
+
+function parseTweet(val){
+	parsedTweet = val.text.split(/\s+/);
+	if($.isNumeric(parsedTweet[1]) && $.isNumeric(parsedTweet[2]))
+	{
+		updateCell(parsedTweet[1],parsedTweet[2],val)
+	}
+	else
+	{
+		twitterthumb=val.user.profile_image_url;
+	}
+}
+
+function addNuclearMarker(loc,icon)
+{
+	slo_loc = new google.maps.LatLng(35.210931, -120.85515700000002);
+	slo_icon = 'images/nuclear.png';
+
+	var slo_marker = new google.maps.Marker({
+		map:map,
+		icon: slo_icon,
+		position: slo_loc
+	});
+
+	google.maps.event.addListener(slo_marker, 'click', function() {
+		zoomTo('slo');
+	});
+
+	fuk_loc = new google.maps.LatLng(37.421582677667104, 141.03249279370118);
+	fuk_icon = 'images/nuclear.png';
+
+	var fuk_marker = new google.maps.Marker({
+		map:map,
+		icon: fuk_icon,
+		position: fuk_loc
+	});
+	google.maps.event.addListener(fuk_marker, 'click', function() {
+		map.setCenter(fuk_loc);
+		map.setZoom(17);
+		map.setMapTypeId(google.maps.MapTypeId.HYBRID);
+	});
+}
+
+function zoomTo(loc)
+{
+	if(loc == 'slo')
+	{
+		map.setCenter(slo_loc);
+		map.setZoom(17);
+		map.setMapTypeId(google.maps.MapTypeId.HYBRID);
+	}
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+// run on document ready
+$(function(){
+	$('.tab-content').height($(window).height()-230)
+});
+
+    </script>
+  </head>
+  <body>
+    <div id="map-canvas"></div>
+
+	<div id="alertbox" class="alert alert-success" style="position: absolute;top:10px;left:300px;padding:5px;">alerting...</div>
+    <div id="mainpanel" class="well" style="background:rgba(255,255,255,0.6);position: absolute;top:10px;left:10px;padding:5px;">
+	<span class="glyphicon glyphicon-minus" style="padding:0px;" onclick="$('#mainpanel-content').slideToggle();"></span> 
+		<div id="mainpanel-content">
+		    <div class="well" style="background:white;padding:5px;text-align:center;">
+				<a href="http://lib.calpoly.edu/outloud/ai1ec_event/a-map-for-the-future-measuring-radiation-levels/?instance_id=" target="_blank">
+					<img class="img-rounded" src="http://lib.calpoly.edu/blog/wp-content/uploads/sites/4/2013/03/GreenOLlogo-e1364488739347.jpg" width="200">
+				</a>
+				<br>
+				<span style="font-size:0.8em;color:#999">Yoh Kawano | February 14, 2014</span>
+	   	 	</div>
+			<!-- Nav tabs -->
+			<ul class="nav nav-pills">
+				<li class="active"><a href="#home" data-toggle="tab">Start</a></li>
+				<li><a href="#options" data-toggle="tab"><span class="glyphicon glyphicon-cog"></span> Options</a></li>
+				<li><a href="#log" data-toggle="tab"><span class="glyphicon glyphicon-dashboard"></span> Log</a></li>
+			</ul>
+
+			<!-- Tab panes -->
+			<div class="tab-content" style="overflow-y: auto;overflow-x: hidden;">
+				<div class="tab-pane active" id="home" style="width:250px;">
+					<br>
+					<div class="well">
+						<span class="badge">1</span><br>
+						A cataclysmic nuclear explosion has just occured in the Diablo Canyon Nuclear Power Plant
+						<br>
+						<button class="btn btn-xs" onclick="zoomTo('slo')"><span class="glyphicon glyphicon-zoom-in"></span> zoom to </button>
+						<button class="btn btn-xs" onclick="changeLocation('slo')"><span class="glyphicon glyphicon-zoom-out"></span> zoom out</button>
+
+					</div>
+					<div class="well">
+						<span class="badge">2</span><br>
+						Inspect the physical landscape and identify grid locations to submit radiation readings to the public.
+						<button class="btn btn-xs btn-success" onclick="labelPolys()">on</button>
+						<button class="btn btn-xs btn-danger" onclick="removeLabelPolys()">off</button> 
+						<span class="glyphicon glyphicon-tag"></span> 
+						Label cells
+					</div>
+					<div class="well" data-toggle="tooltip" data-placement="right" title="Tooltip on right">
+						<span class="badge">3</span><br>
+						Tweet, publish and map:
+						<blockquote>
+							<p>#mapoutloud 289 60 Radiation very high up in the mountains</p>
+						</blockquote>
+						<small>Use the hashtag <span class="badge">#mapoutloud</span>, followed by a cell grid number <span class="badge">289</span>, followed by a radiation reading between 0-100, and finish it up with a personal message</small>
+					</div>
+
+				</div>
+				<div class="tab-pane" id="options">
+					<!-- <h1>Twitter Radiation Mapper</h1> -->
+					<br>
+					<button class="btn btn-xs" onclick="changeLocation('slo')"><span class="glyphicon glyphicon-map-marker"></span> San Luis Obispo</button>
+					<button class="btn btn-xs" onclick="changeLocation('fukushima')"><span class="glyphicon glyphicon-map-marker"></span> Fukushima</button>
+					<hr>
+					<button class="btn btn-xs" onclick="map.setMapTypeId(google.maps.MapTypeId.ROADMAP);"><span class="glyphicon glyphicon-globe"></span> Map</button>
+					<button class="btn btn-xs" onclick="map.setMapTypeId(google.maps.MapTypeId.HYBRID);"><span class="glyphicon glyphicon-globe"></span> Satellite</button>
+					<hr>
+					<button class="btn btn-xs btn-success" onclick="twittertimer=true;">on</button>
+					<button class="btn btn-xs btn-danger" onclick="twittertimer=false;">off</button>
+					<img src="https://cdn3.iconfinder.com/data/icons/picons-social/57/03-twitter-16.png"> 
+					#mapoutloud
+					<hr>
+					<button class="btn btn-xs btn-success" onclick="labelPolys()">on</button>
+					<button class="btn btn-xs btn-danger" onclick="removeLabelPolys()">off</button> 
+					<span class="glyphicon glyphicon-tag"></span> 
+					Label cells
+					<hr>
+					<button class="btn btn-sm btn-primary" onclick="automate()"><span class="glyphicon glyphicon-play"></span> automate</button>
+					<button class="btn btn-sm btn-primary" onclick="stopautomate()"><span class="glyphicon glyphicon-pause"></span> pause</button>
+					<button class="btn btn-sm btn-primary" onclick="clearMap()"><span class="glyphicon glyphicon-refresh"></span> clear</button>
+				</div>
+				<div class="tab-pane" id="log">
+					<div id="radiationlog" class="panel-body" style=""></div>
+				</div>
+			</div>
+
+		</div>
+
+
+
+    </div>
+	
+
+  </body>
+</html>

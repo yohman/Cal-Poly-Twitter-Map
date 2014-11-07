@@ -1,0 +1,30 @@
+Layout {
+  FileType : "delimited"
+  Delimiter : ","
+  Latitude : "2"
+  Longitude : "3"
+  SkipRows : "1"
+  TextCodec : "System"
+  FieldDefinitions {
+    0 {
+      Name : "No"
+      Type : "int"
+    }
+    1 {
+      Name : "GPS_PCTime"
+      Type : "string"
+    }
+    2 {
+      Name : "LAT"
+      Type : "double"
+    }
+    3 {
+      Name : "LNG"
+      Type : "double"
+    }
+    4 {
+      Name : "DoseRate_0"
+      Type : "double"
+    }
+  }
+}
